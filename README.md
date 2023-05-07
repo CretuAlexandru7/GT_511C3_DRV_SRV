@@ -7,7 +7,7 @@ The driver (written in C, based on the GT-511C3 datasheet) is designed to be run
 I recommand using the Visual Studio Debug Tab -> Windows -> Memory -> in order to see how the packets / commands are created.
 
 
-Example of one of the comamnds (BIG ENDIAN USED!):
+<h2>Example of one of the comamnds (BIG ENDIAN USED!):
 
 
 Command - Enrollment START (FingerPrint Index = 23 (17 HEX)):
