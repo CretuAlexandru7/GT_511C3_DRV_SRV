@@ -13,12 +13,17 @@ Example of one of the comamnds (BIG ENDIAN USED!):
 Command - Enrollment START (FingerPrint Index = 23 (17 HEX)):
 
 (Microcontroller command) - SEND: "55 AA 01 00 17 00 00 00 22 00 39 01"
+
 (FingerP Sensor response) - RECV: "55 AA 01 00 00 00 00 00 30 00 30 01"
 
 Command Start code1 = 0x55
+
 Command Start code2 = 0xAA
+
 Device ID = 0x00 01
+
 Input parameter = 0x00 00 00 17
+
 Command Code = 0x00 22
 
 CheckSum = 0x01 39
