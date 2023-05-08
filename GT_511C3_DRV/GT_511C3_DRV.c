@@ -24,7 +24,6 @@ static struct GT_511C3* FP_SENSOR = NULL;
 #define READING_BYTE_BUFFER_SIZE 1
 #define ACK_NACK_PACKET_POSITION 8
 
-
 #define GET_FIRST_BYTE(x) (byte)((x) & 0xFF) 
 #define GET_SECOND_BYTE(x) (byte)((x >> 8) & 0xFF) 
 #define GET_THIRD_BYTE(x) (byte)((x >> 16) & 0xFF) 
@@ -48,7 +47,11 @@ byte* vDoCreatePacket(struct sCMD_RSP_PKT* GT_PKT)
 {
 	/* Allocate memory for the packet */
 	byte* packet = (byte*)malloc(PACKET_SIZE * sizeof(byte));
-	// TODO: verify:
+	if (packet == NULL)
+	{
+		fprintf(stderr, "ERROR Unable to allocate memory in vDoCreatePacket function \n.");
+		return;
+	}
 
 	WORD cmd = GT_PKT->eCommands;
 
@@ -132,7 +135,11 @@ void vDoReceivePacket(struct sCMD_RSP_PKT* RSP_PACKET)
 
 	/* Allocate memory for a 12 bytes packet */
 	byte* response = (byte*)malloc(PACKET_SIZE * sizeof(byte));
-	// TODO: verify 
+	if (response == NULL)
+	{
+		fprintf(stderr, "ERROR Unable to allocate memory in vDoReceivePacket function \n.");
+		return;
+	}
 
 	/* Wait until the first byte of the response packet is received */
 	while (readFlag)
@@ -167,6 +174,9 @@ void vDoReceivePacket(struct sCMD_RSP_PKT* RSP_PACKET)
 
 		/* Interpret the response message */
 		vDoInterpretResponse(response);
+
+		/* Deallocate memory */
+		free(response);
 	}
 }
 
@@ -188,7 +198,7 @@ void Initialize_FP_Sensor()
 		if (FP_SENSOR == NULL)
 		{			
 			bMemoryLeak = True;
-			// TODO: STDERR error
+			fprintf(stderr, "ERROR FP_SENSOR pointer is NULL\n.");
 			return;
 		}
 
@@ -196,12 +206,14 @@ void Initialize_FP_Sensor()
 		FP_SENSOR->sSENT_GT_PKT = (struct sCMD_RSP_PKT*)malloc(sizeof(struct sCMD_RSP_PKT));
 		if (FP_SENSOR->sSENT_GT_PKT == NULL)
 		{
+			fprintf(stderr, "ERROR FP_SENSOR->sSENT_GT_PKT pointer is NULL\n.");
 			bMemoryLeak = True;
 		}
 
 		FP_SENSOR->sRECEIVED_GT_PKT = (struct sCMD_RSP_PKT*)malloc(sizeof(struct sCMD_RSP_PKT));
 		if (FP_SENSOR->sRECEIVED_GT_PKT == NULL)
 		{
+			fprintf(stderr, "ERROR FP_SENSOR->sRECEIVED_GT_PKT pointer is NULL\n.");
 			bMemoryLeak = True;
 		}
 
@@ -214,7 +226,7 @@ void Initialize_FP_Sensor()
 			FP_SENSOR->sSENT_GT_PKT = NULL;
 			FP_SENSOR->sRECEIVED_GT_PKT = NULL;
 
-			// TODO: STDERR error
+			fprintf(stderr, "ERROR while allocating memory memory.\n.");
 			return;
 		}
 
@@ -227,7 +239,7 @@ void Initialize_FP_Sensor()
 		// TODO:
 		GT_SNT_PKT->eCommands = Initialize_FP;
 		GT_SNT_PKT->eError_Codes = NOT_AN_ERROR;
-		GT_SNT_PKT->sParameter = 0x1044;
+		GT_SNT_PKT->sParameter = 0;
 		GT_RCV_PKT->eCommands = NOT_A_COMMAND;
 		GT_RCV_PKT->sParameter = 0;
 
@@ -248,7 +260,6 @@ void Initialize_FP_Sensor()
 		
 		/* Check if GT_RCV_PKT->eError_Codes == NO_ERROR before continuing, otherwise if it shows an error we should handle it */
 		
-
 		free(packet);
 		free(GT_RCV_PKT);
 	}	
@@ -266,6 +277,15 @@ struct GT_511C3* GT_511C3_GetInstance()
 	}
 
 	return FP_SENSOR;
+}
+
+void vDoEnrollStart()
+{
+	if (FP_SENSOR == NULL)
+	{
+		fprintf(stderr, "Error FP_SENSOR pointer is NULL\n.");
+		return;
+	}
 }
 /*****************************************************************************/
 
@@ -308,7 +328,7 @@ int main()
 	/*****************************************************************************/
 
 	struct GT_511C3* FP_INSTANCE = GT_511C3_GetInstance();
-	//FP_INSTANCE->sEnrollStart = &vDoEnrollStart;
+	FP_INSTANCE->sEnrollStart = &vDoEnrollStart;
 
 	/* Test the 4 cases for the EnrollStart */
 	/* One test must be OK */
