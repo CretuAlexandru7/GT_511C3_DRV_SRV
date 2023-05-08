@@ -16,6 +16,7 @@ SOCKET clientSocket;
 static struct GT_511C3* FP_SENSOR = NULL;
 
 /* Reduce the use of maginc numbers in code */
+#define PACKET_SIZE 12
 #define HEX_TO_DEC_ACK_30 48
 #define HEX_TO_DEC_NACK_30 49
 #define LOW_ERROR_CODE_POSITION 4
@@ -24,13 +25,10 @@ static struct GT_511C3* FP_SENSOR = NULL;
 #define ACK_NACK_PACKET_POSITION 8
 
 
-// TODO: if or not if is big endian
-#define PARAMETER_BYTE(x) (byte)((x) & 0xFF) 
-
-//packet[4] = (byte)(GT_PKT->sParameter & 0xFF);			/* sParameter is type DWORD -> it has 32 bits; */
-//packet[5] = (byte)((GT_PKT->sParameter >> 8) & 0xFF);	/* Shift the bits accordingly in order to get the coresponding bytes */
-//packet[6] = (byte)((GT_PKT->sParameter >> 16) & 0xFF);
-//packet[7] = (byte)((GT_PKT->sParameter >> 24) & 0xFF);
+#define GET_FIRST_BYTE(x) (byte)((x) & 0xFF) 
+#define GET_SECOND_BYTE(x) (byte)((x >> 8) & 0xFF) 
+#define GET_THIRD_BYTE(x) (byte)((x >> 16) & 0xFF) 
+#define GET_FOURTH_BYTE(x) (byte)((x >> 24) & 0xFF) 
 
 
 /*************************   Coomand - Response Packet  ***********************/
@@ -49,7 +47,7 @@ const char* cDoGetErrorName(DWORD code) {
 byte* vDoCreatePacket(struct sCMD_RSP_PKT* GT_PKT)
 {
 	/* Allocate memory for the packet */
-	byte* packet = (byte*)malloc(12 * sizeof(byte));
+	byte* packet = (byte*)malloc(PACKET_SIZE * sizeof(byte));
 	// TODO: verify:
 
 	WORD cmd = GT_PKT->eCommands;
@@ -57,17 +55,17 @@ byte* vDoCreatePacket(struct sCMD_RSP_PKT* GT_PKT)
 	packet[0] = CMD_START_CODE_1;
 	packet[1] = CMD_START_CODE_2;
 	packet[2] = CMD_DEVICE_ID;
-	packet[3] = NULL_BYTE;	
-	packet[4] = (byte)(GT_PKT->sParameter & 0xFF);			/* sParameter is type DWORD -> it has 32 bits; */
-	packet[5] = (byte)((GT_PKT->sParameter >> 8) & 0xFF);	/* Shift the bits accordingly in order to get the coresponding bytes */
-	packet[6] = (byte)((GT_PKT->sParameter >> 16) & 0xFF);
-	packet[7] = (byte)((GT_PKT->sParameter >> 24) & 0xFF);	
-	packet[8] = (byte)(cmd & 0x00FF);						/* First byte of the command */
-	packet[9] = (byte)((cmd >> 8) & 0x00FF);				/* Second byte of the command */
+	packet[3] = NULL_BYTE;		
+	packet[4] = GET_FIRST_BYTE(GT_PKT->sParameter);		/* sParameter is type DWORD -> it has 32 bits; */
+	packet[5] = GET_SECOND_BYTE(GT_PKT->sParameter);		/* Shift the bits accordingly in order to get the coresponding bytes */
+	packet[6] = GET_THIRD_BYTE(GT_PKT->sParameter);
+	packet[7] = GET_FOURTH_BYTE(GT_PKT->sParameter);
+ 	packet[8] = (byte)GET_FIRST_BYTE(cmd);							/* First byte of the command */
+	packet[9] = (byte)GET_SECOND_BYTE(cmd);					/* Second byte of the command */
 	
-	WORD checksum = GT_PKT->sCalcChecksum(packet);			/* Calculate the packet checksum */
-	packet[10] = (byte)(checksum & 0x00FF);
-	packet[11] = (byte)((checksum >> 8) & 0x00FF);
+	WORD checksum = GT_PKT->sCalcChecksum(packet);				/* Calculate the packet checksum */
+	packet[10] = GET_FIRST_BYTE(checksum);
+	packet[11] = GET_SECOND_BYTE(checksum);
 
 	return packet;
 }
@@ -88,13 +86,13 @@ WORD vDoCalcChecksum(byte* packet)
 void vDoSendCommand(byte* packet)
 {
 	printf("Command to be send:            ");
-	for (byte i = 0; i < 12; i++)
+	for (byte i = 0; i < PACKET_SIZE; i++)
 	{
 		printf("%02X ", *(packet + i));
 	}
 
 	// Send a (12 bytes) PACKET to the server
-	if (send(clientSocket, packet, 12, 0) < 0)
+	if (send(clientSocket, packet, PACKET_SIZE, 0) < 0)
 	{
 		printf("Send failed. Error Code : %d", WSAGetLastError());
 	}
@@ -108,7 +106,7 @@ void vDoInterpretResponse(byte* pck_response)
 	/* TObeDone: Length / sumcheck / correct cmd or address check*/
 	if (*(pck_response + ACK_NACK_PACKET_POSITION) == HEX_TO_DEC_ACK_30)
 	{
-		printf("RESPONSE: ACK - OK ");		
+		printf("RESPONSE: ACK - OK");		
 	}
 	else
 	{
@@ -133,7 +131,7 @@ void vDoReceivePacket(struct sCMD_RSP_PKT* RSP_PACKET)
 	bool readFlag = True;    /* Flag used to mark the beginning of a command */
 
 	/* Allocate memory for a 12 bytes packet */
-	byte* response = (byte*)malloc(12 * sizeof(byte));
+	byte* response = (byte*)malloc(PACKET_SIZE * sizeof(byte));
 	// TODO: verify 
 
 	/* Wait until the first byte of the response packet is received */
@@ -160,7 +158,7 @@ void vDoReceivePacket(struct sCMD_RSP_PKT* RSP_PACKET)
 
 		printf("\nResponse (from the server):    ");
 		printf("%02x ", response[0]);
-		for (byte i = 1; i < 12; i++)
+		for (byte i = 1; i < PACKET_SIZE; i++)
 		{
 			byte_received = recv(clientSocket, &response[i], READING_BYTE_BUFFER_SIZE, 0);
 			printf("%02x ", response[i]);
@@ -171,7 +169,6 @@ void vDoReceivePacket(struct sCMD_RSP_PKT* RSP_PACKET)
 		vDoInterpretResponse(response);
 	}
 }
-
 
 
 /*****************************************************************************/
@@ -230,7 +227,7 @@ void Initialize_FP_Sensor()
 		// TODO:
 		GT_SNT_PKT->eCommands = Initialize_FP;
 		GT_SNT_PKT->eError_Codes = NOT_AN_ERROR;
-		GT_SNT_PKT->sParameter = 0;
+		GT_SNT_PKT->sParameter = 0x1044;
 		GT_RCV_PKT->eCommands = NOT_A_COMMAND;
 		GT_RCV_PKT->sParameter = 0;
 
