@@ -4,6 +4,7 @@ This project is intended as an exercise in developing programming skills and is 
 
 The driver (written in C, based on the GT-511C3 datasheet) is designed to be run as a client to a Python server that simulates the behavior(responses) of the fingerprint sensor.
 
+
 <h3>Key features of the implementation:</h3>
 
 - data types: structs, enums, typedef
@@ -14,7 +15,7 @@ The driver (written in C, based on the GT-511C3 datasheet) is designed to be run
 - use of the Singleton design pattern to ensure a single instance of the FingerPrint data is created throughout the application.
 - a brief touch of networking, specifically Windows sockets, to communicate with the Python server and simulate the behavior of the fingerprint sensor.
 
-I recommand using the Visual Studio Debug Tab -> Windows -> Memory -> in order to see how the packets / commands are created.
+
 
 
 <h3>Example of one of the comamnds (BIG ENDIAN USED!):</h3>
@@ -39,5 +40,7 @@ Command Code = 0x00 22
 CheckSum = 0x01 39
 
 ACK: 0x00 30
+
+I recommand using the Visual Studio Debug Tab -> Windows -> Memory -> in order to see how the packets / commands are created.
 
 Datasheet for more details: https://cdn.sparkfun.com/datasheets/Sensors/Biometric/GT-511C1R_datasheet_V2-2016-10-25.pdf
