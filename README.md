@@ -4,6 +4,16 @@ This project is intended as an exercise in developing programming skills and is 
 
 The driver (written in C, based on the GT-511C3 datasheet) is designed to be run as a client to a Python server that simulates the behavior(responses) of the fingerprint sensor.
 
+<h3>Key features of the implementation:</h3>
+
+- data types: structs, enums, typedef
+- preprocessor directives with macros to improve code organization and readability.
+- standard streams, stderr and stdout, for error and debug messages respectively.
+- use of bitwise operations to manipulate data at the bit level in order to optimize code's performance.
+- implementation of OOP concepts such as encapsulation and abstraction (even though the project is written in C).
+- use of the Singleton design pattern to ensure a single instance of the FingerPrint data is created throughout the application.
+- a brief touch of networking, specifically Windows sockets, to communicate with the Python server and simulate the behavior of the fingerprint sensor.
+
 I recommand using the Visual Studio Debug Tab -> Windows -> Memory -> in order to see how the packets / commands are created.
 
 
