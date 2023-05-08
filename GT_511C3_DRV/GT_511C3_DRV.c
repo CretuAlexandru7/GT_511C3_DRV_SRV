@@ -15,7 +15,14 @@ SOCKET clientSocket;
 /* Singletone FP Sensor GT_511C3 instance variable */
 static struct GT_511C3* FP_SENSOR = NULL;
 
+/* Reduce the use of maginc numbers in code */
+#define HEX_TO_DEC_ACK_30 48
+#define HEX_TO_DEC_NACK_30 49
+#define LOW_ERROR_CODE_POSITION 4
+#define HIGH_ERROR_CODE_POSITION 5
 #define READING_BYTE_BUFFER_SIZE 1
+#define ACK_NACK_PACKET_POSITION 8
+
 
 // TODO: if or not if is big endian
 #define PARAMETER_BYTE(x) (byte)((x) & 0xFF) 
@@ -27,6 +34,16 @@ static struct GT_511C3* FP_SENSOR = NULL;
 
 
 /*************************   Coomand - Response Packet  ***********************/
+
+/*Calculte and return the ERROR NAME */
+const char* cDoGetErrorName(DWORD code) {
+	for (byte i = 0; i < sizeof(error_codes) / sizeof(error_codes[0]); i++) {
+		if (error_codes[i].code == code) {
+			return error_codes[i].name;
+		}
+	}
+	return "UNKNOWN_ERROR";
+}
 
 /* Returns the completed Packet Command */
 byte* vDoCreatePacket(struct sCMD_RSP_PKT* GT_PKT)
@@ -80,8 +97,33 @@ void vDoSendCommand(byte* packet)
 	if (send(clientSocket, packet, 12, 0) < 0)
 	{
 		printf("Send failed. Error Code : %d", WSAGetLastError());
-		return 1;
 	}
+}
+
+/* Get as a parameter a response packet, and interprets it */
+void vDoInterpretResponse(byte* pck_response)
+{
+	/* Only one test will be implemented here: */
+	/* To test if the message is ACK or NOT_ACK and the value of the received param (error) */
+	/* TObeDone: Length / sumcheck / correct cmd or address check*/
+	if (*(pck_response + ACK_NACK_PACKET_POSITION) == HEX_TO_DEC_ACK_30)
+	{
+		printf("RESPONSE: ACK - OK ");		
+	}
+	else
+	{
+		WORD full_error;
+		const char* name;
+		byte error_code[2];
+
+		error_code[1] = *(pck_response + LOW_ERROR_CODE_POSITION);
+		error_code[0] = *(pck_response + HIGH_ERROR_CODE_POSITION);
+		full_error = error_code[0];
+		full_error = (full_error << 8) | error_code[1];
+		name = cDoGetErrorName(full_error);
+		printf("NAK: Error code 0x%x is %s\n", full_error, name);
+	}
+	
 }
 
 /* Receive Response Packet */
@@ -125,9 +167,12 @@ void vDoReceivePacket(struct sCMD_RSP_PKT* RSP_PACKET)
 		}
 		printf("\n");
 
-		// TODO: implement vDoInterpretResponse(response);
+		/* Interpret the response message */
+		vDoInterpretResponse(response);
 	}
 }
+
+
 
 /*****************************************************************************/
 
@@ -206,6 +251,7 @@ void Initialize_FP_Sensor()
 		
 		/* Check if GT_RCV_PKT->eError_Codes == NO_ERROR before continuing, otherwise if it shows an error we should handle it */
 		
+
 		free(packet);
 		free(GT_RCV_PKT);
 	}	
@@ -270,23 +316,23 @@ int main()
 	/* Test the 4 cases for the EnrollStart */
 	/* One test must be OK */
 	/* 3 must be: Not Acknowledge: FULL_DATABASE, OUT_OF_RANGE, ALREADY_USED */
-	printf("Testing Enrolment Function in a loop.\n");
-	byte input = 0;
-	while (True)
-	{
-		printf("Give a value (int) for the FingerPrint Index: ");
-		scanf_s("%d", &input);
+	//printf("Testing Enrolment Function in a loop.\n");
+	//byte input = 0;
+	//while (True)
+	//{
+	//	printf("Give a value (int) for the FingerPrint Index: ");
+	//	scanf_s("%d", &input);
 
-		if (input == 0) {
-			printf("Exiting loop.\n");
-			break;
-		}
+	//	if (input == 0) {
+	//		printf("Exiting loop.\n");
+	//		break;
+	//	}
 
-	}
+	//}
 
 
 	/*   TEST BYTES  packet */
-	byte* packet;
+	//byte* packet;
 	//byte* packet = (byte*)malloc(12 * sizeof(byte));
 
 	//vDoSendCommand(packet);

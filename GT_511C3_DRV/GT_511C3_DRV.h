@@ -94,8 +94,27 @@ struct sCMD_RSP_PKT {
 	/* Function pointer to the computing packet function */
 	byte* (*sCalcPacket)(struct sCMD_RSP_PKT*);
 	/* Function pointer to the checksum calculation function */
-	WORD(*sCalcChecksum)(byte* packet);
+	WORD(*sCalcChecksum)(byte*);
+	void(*sInterpretResponse)(byte*);
 };
+
+/* Additional Structures used to simulate a DICTIONARY {key: value} pair */
+struct error_map {
+	int code;
+	const char* name;
+};
+
+struct error_map error_codes[] = {
+	{NOT_AN_ERROR, "NOT_AN_ERROR"},
+	{NACK_TIMEOUT, "NACK_TIMEOUT"},
+	{NACK_INVALID_BAUDRATE, "NACK_INVALID_BAUDRATE"},
+	{NACK_INVALID_POS, "NACK_INVALID_POS"},
+	{NACK_IS_NOT_USED, "NACK_IS_NOT_USED"},
+	{NACK_IS_ALREADY_USED, "NACK_IS_ALREADY_USED"},
+	{NACK_COMM_ERR, "NACK_COMM_ERR"},
+};
+
+
 /**********************************************************************************/
 
 

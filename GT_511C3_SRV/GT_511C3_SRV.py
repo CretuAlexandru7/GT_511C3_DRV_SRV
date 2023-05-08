@@ -172,7 +172,7 @@ def client_loop(client, address):
 			# Case: Open COMMAND
 			case ['01', '00']:
 				LOG.info("CASE: ['01', '00']")
-				response = bytes.fromhex("55aa01000000000030003001")
+				response = bytes.fromhex("55aa01000510000030003001")
 				client.send(response)
 				LOG.info("COMMAND sent: {}".format(' '.join('{:02x}'.format(x) for x in response)))
 
@@ -184,7 +184,7 @@ def client_loop(client, address):
 				# If the (clock) minute is odd -> send to the microcontroller (client) a response with the corresponding
 				# error message -> NACK_DB_IS_FULL: 0x10 09
 				now = datetime.datetime.now()
-				minute = now.minute
+				minute = now. minute
 				if minute % 2 != 0:
 					response = bytes.fromhex("55aa01000910000031004a01")
 					client.send(response)
