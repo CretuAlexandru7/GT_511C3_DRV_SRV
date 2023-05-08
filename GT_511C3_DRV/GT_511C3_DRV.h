@@ -131,7 +131,7 @@ struct GT_511C3
 	bool(*sChangeBoundRate)(int boundR);			// Changes the boundrate of the connection
 	int(*sGetEnrollCount)();							// Get the DataBase size
 	bool(*sCheckEnrolled)(int id);					// Checks if the FP index is already used
-	int(*sEnrollStart)(int id);						// Starts the enrolment process;
+	int(*sEnrollStart)(byte id);					// Starts the enrolment process;
 	int(*sEnroll1)();								// Get the first image of the FP
 	int(*sEnroll2)();								// Get the second image of the FP
 	int(*sEnroll3)();								// Get the third image of the FP

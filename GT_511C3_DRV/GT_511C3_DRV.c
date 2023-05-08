@@ -97,7 +97,7 @@ void vDoSendCommand(byte* packet)
 	// Send a (12 bytes) PACKET to the server
 	if (send(clientSocket, packet, PACKET_SIZE, 0) < 0)
 	{
-		printf("Send failed. Error Code : %d", WSAGetLastError());
+		printf("Send failed. ERROR Code : %d", WSAGetLastError());
 	}
 }
 
@@ -109,7 +109,7 @@ void vDoInterpretResponse(byte* pck_response)
 	/* TObeDone: Length / sumcheck / correct cmd or address check*/
 	if (*(pck_response + ACK_NACK_PACKET_POSITION) == HEX_TO_DEC_ACK_30)
 	{
-		printf("RESPONSE: ACK - OK");		
+		printf("RESPONSE: ACK - OK\n");		
 	}
 	else
 	{
@@ -122,9 +122,8 @@ void vDoInterpretResponse(byte* pck_response)
 		full_error = error_code[0];
 		full_error = (full_error << 8) | error_code[1];
 		name = cDoGetErrorName(full_error);
-		printf("NAK: Error code 0x%x is %s\n", full_error, name);
+		printf("NAK: ERROR - %s code 0x%x\n\n", name, full_error);
 	}
-	
 }
 
 /* Receive Response Packet */
@@ -236,11 +235,9 @@ void Initialize_FP_Sensor()
 		struct sCMD_RSP_PKT* GT_RCV_PKT = FP_SENSOR->sRECEIVED_GT_PKT;
 
 		/* Default values for Initialization phase */
-		// TODO:
 		GT_SNT_PKT->eCommands = Initialize_FP;
 		GT_SNT_PKT->eError_Codes = NOT_AN_ERROR;
 		GT_SNT_PKT->sParameter = 0;
-		GT_RCV_PKT->eCommands = NOT_A_COMMAND;
 		GT_RCV_PKT->sParameter = 0;
 
 		/* Assign function pointers for SENT Packet */
@@ -261,7 +258,6 @@ void Initialize_FP_Sensor()
 		/* Check if GT_RCV_PKT->eError_Codes == NO_ERROR before continuing, otherwise if it shows an error we should handle it */
 		
 		free(packet);
-		free(GT_RCV_PKT);
 	}	
 }
 
@@ -279,14 +275,36 @@ struct GT_511C3* GT_511C3_GetInstance()
 	return FP_SENSOR;
 }
 
-void vDoEnrollStart()
+void vDoEnrollStart(byte fingerprint_id)
 {
 	if (FP_SENSOR == NULL)
 	{
 		fprintf(stderr, "Error FP_SENSOR pointer is NULL\n.");
 		return;
 	}
+
+	/* Struct->send/received_packet variable name is too long -> create an alias: */
+	struct sCMD_RSP_PKT* GT_SNT_PKT = FP_SENSOR->sSENT_GT_PKT;
+	struct sCMD_RSP_PKT* GT_RCV_PKT = FP_SENSOR->sRECEIVED_GT_PKT;
+
+	/* Default values for Initialization phase */
+	GT_SNT_PKT->eCommands = EnrollStart;
+	GT_SNT_PKT->eError_Codes = NOT_AN_ERROR;
+	GT_SNT_PKT->sParameter = fingerprint_id;
+	GT_RCV_PKT->sParameter = 0;
+
+	/* Compute the packet bytes values */
+	byte* packet = GT_SNT_PKT->sCalcPacket(FP_SENSOR->sSENT_GT_PKT);
+
+	/* Send the packet / command */
+	FP_SENSOR->sSendCommand(packet);
+	/* Receive the response packet */
+	FP_SENSOR->sReceiveResponsePacket(GT_RCV_PKT);
+
+	free(packet);
 }
+
+
 /*****************************************************************************/
 
 int main()
@@ -301,7 +319,7 @@ int main()
 	// Initialize Winsock
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 	{
-		printf("WSAStartup failed. Error Code : %d", WSAGetLastError());
+		printf("WSAStartup failed. ERROR Code : %d", WSAGetLastError());
 		return 1;
 	}
 
@@ -321,7 +339,7 @@ int main()
 	// Connect to the server
 	if (connect(clientSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0)
 	{
-		printf("connect failed. Error Code : %d", WSAGetLastError());
+		printf("Connect failed. ERROR Code : %d", WSAGetLastError());
 		return 1;
 	}
 	
@@ -330,29 +348,28 @@ int main()
 	struct GT_511C3* FP_INSTANCE = GT_511C3_GetInstance();
 	FP_INSTANCE->sEnrollStart = &vDoEnrollStart;
 
+	
+
 	/* Test the 4 cases for the EnrollStart */
 	/* One test must be OK */
 	/* 3 must be: Not Acknowledge: FULL_DATABASE, OUT_OF_RANGE, ALREADY_USED */
-	//printf("Testing Enrolment Function in a loop.\n");
-	//byte input = 0;
-	//while (True)
-	//{
-	//	printf("Give a value (int) for the FingerPrint Index: ");
-	//	scanf_s("%d", &input);
+	printf("\nTesting Enrolment Function in a loop.\n");
+	byte input = 0;
+	while (True)
+	{
+		printf("Give a value (int) for the FingerPrint Index: ");
+		scanf_s("%d", &input);
 
-	//	if (input == 0) {
-	//		printf("Exiting loop.\n");
-	//		break;
-	//	}
+		if (input == 0) {
+			printf("Exiting loop.\n");
+			break;
+		}
+		else
+		{
+			FP_INSTANCE->sEnrollStart(input);
+		}
 
-	//}
-
-
-	/*   TEST BYTES  packet */
-	//byte* packet;
-	//byte* packet = (byte*)malloc(12 * sizeof(byte));
-
-	//vDoSendCommand(packet);
+	}
 
 	// Close the socket and clean up Winsock
 	closesocket(clientSocket);
