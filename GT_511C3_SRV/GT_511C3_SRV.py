@@ -29,7 +29,7 @@ def client_loop(client, address):
 			# Case: Open COMMAND
 			case ['01', '00']:
 				LOG.info("CASE: ['01', '00']")
-				response = bytes.fromhex("55aa01000510000030003001")
+				response = bytes.fromhex("55aa01000000000030003001")
 				client.send(response)
 				LOG.info("COMMAND sent: {}".format(' '.join('{:02x}'.format(x) for x in response)))
 

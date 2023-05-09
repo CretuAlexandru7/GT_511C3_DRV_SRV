@@ -172,7 +172,7 @@ void vDoReceivePacket(struct sCMD_RSP_PKT* RSP_PACKET)
 		printf("\n");
 
 		/* Interpret the response message */
-		vDoInterpretResponse(response);
+		RSP_PACKET->sInterpretResponse(response);
 
 		/* Deallocate memory */
 		free(response);
@@ -184,6 +184,18 @@ void vDoReceivePacket(struct sCMD_RSP_PKT* RSP_PACKET)
 
 
 /*****************************   GT_511C3   **********************************/
+
+/* Function used to close te LED Light and deallocate memory */
+void vDoCloseFPSensor()
+{
+	printf("\nClossing the connection");
+
+	free(FP_SENSOR->sSENT_GT_PKT);
+	free(FP_SENSOR->sRECEIVED_GT_PKT);
+
+	FP_SENSOR->sSENT_GT_PKT = NULL;
+	FP_SENSOR->sRECEIVED_GT_PKT = NULL;
+}
 
 /* Initialize the device */
 void Initialize_FP_Sensor()
@@ -240,13 +252,14 @@ void Initialize_FP_Sensor()
 		GT_SNT_PKT->sParameter = 0;
 		GT_RCV_PKT->sParameter = 0;
 
-		/* Assign function pointers for SENT Packet */
+		/* Assign function pointers */
 		FP_SENSOR->sSendCommand = &vDoSendCommand;
 		GT_SNT_PKT->sCalcPacket = &vDoCreatePacket;
 		GT_SNT_PKT->sCalcChecksum = &vDoCalcChecksum;
-
-		/* Assign function pointers for RECEIVED Packet */
+		GT_RCV_PKT->sInterpretResponse = &vDoInterpretResponse;		
 		FP_SENSOR->sReceiveResponsePacket = &vDoReceivePacket;
+		FP_SENSOR->sClose = &vDoCloseFPSensor;
+
 
 		/* Compute the packet bytes values */
 		byte* packet = GT_SNT_PKT->sCalcPacket(FP_SENSOR->sSENT_GT_PKT);
@@ -255,8 +268,7 @@ void Initialize_FP_Sensor()
 		/* Receive the response packet */
 		FP_SENSOR->sReceiveResponsePacket(GT_RCV_PKT);
 		
-		/* Check if GT_RCV_PKT->eError_Codes == NO_ERROR before continuing, otherwise if it shows an error we should handle it */
-		
+		/* Deallocate memory*/
 		free(packet);
 	}	
 }
@@ -301,6 +313,7 @@ void vDoEnrollStart(byte fingerprint_id)
 	/* Receive the response packet */
 	FP_SENSOR->sReceiveResponsePacket(GT_RCV_PKT);
 
+	/* Deallocate packet memory */
 	free(packet);
 }
 
@@ -309,7 +322,7 @@ void vDoEnrollStart(byte fingerprint_id)
 
 int main()
 {
-	/************************  CLIENT (for serve) CODE  **********************/
+	/************************  CLIENT CODE  **********************/
 	/* Create socket, set up the server address variables,  connect to the server */
 	WSADATA wsaData;
 	struct sockaddr_in serverAddress;
@@ -348,13 +361,12 @@ int main()
 	struct GT_511C3* FP_INSTANCE = GT_511C3_GetInstance();
 	FP_INSTANCE->sEnrollStart = &vDoEnrollStart;
 
-	
 
 	/* Test the 4 cases for the EnrollStart */
 	/* One test must be OK */
 	/* 3 must be: Not Acknowledge: FULL_DATABASE, OUT_OF_RANGE, ALREADY_USED */
 	printf("\nTesting Enrolment Function in a loop.\n");
-	byte input = 0;
+	int input = 0;
 	while (True)
 	{
 		printf("Give a value (int) for the FingerPrint Index: ");
@@ -371,6 +383,8 @@ int main()
 
 	}
 
+	// Close function to dealocate memory: FP_INSTANCE
+	FP_INSTANCE->sClose();
 	// Close the socket and clean up Winsock
 	closesocket(clientSocket);
 	WSACleanup();

@@ -19,9 +19,9 @@ typedef unsigned char bool;
 /*******  GLOBAL CONST VARIALBES - used in both command and response packet  ******/
 static const byte CMD_START_CODE_1 = 0X55;
 static const byte CMD_START_CODE_2 = 0XAA;
-static const WORD CMD_DEVICE_ID = 0x01;       /*  Device ID -> WORD (2 bytes)  */
+static const WORD CMD_DEVICE_ID = 0x01;		/*  Device ID -> WORD (2 bytes)  */
 static const WORD PACKET_SIZE = 12;
-static const byte NULL_BYTE = 0x00;       /*  Device ID -> WORD (2 bytes)  */
+static const byte NULL_BYTE = 0x00;
 /**********************************************************************************/
 
 
@@ -95,6 +95,9 @@ struct sCMD_RSP_PKT {
 	byte* (*sCalcPacket)(struct sCMD_RSP_PKT*);
 	/* Function pointer to the checksum calculation function */
 	WORD(*sCalcChecksum)(byte*);
+
+	/* Function pointers specific for the RECEIVED PACKET */
+	/* Function pointer to the packet interpreting function */
 	void(*sInterpretResponse)(byte*);
 };
 
@@ -125,26 +128,22 @@ struct GT_511C3
 	bool sUseSerialDebug;							// Enables / Disables printing DEBUGing info over the serial communnication.
 
 	void(*sGT_511C3)();								// New FP Scaner object
-	void(*sInitialize_FP)();									// Initialize the FP Scanner
-	void(*sClose)();
+	void(*sInitialize_FP)();						// Initialize the FP Scanner
+	void(*sClose)();								// (Close the LEDLight) Dealocate the memory
 	bool(*sSetLed)(bool on_off);					// Turns on or off the LED backlight (NEEDED FOR SCANNING)
 	bool(*sChangeBoundRate)(int boundR);			// Changes the boundrate of the connection
-	int(*sGetEnrollCount)();							// Get the DataBase size
+	int(*sGetEnrollCount)();						// Get the DataBase size
 	bool(*sCheckEnrolled)(int id);					// Checks if the FP index is already used
 	int(*sEnrollStart)(byte id);					// Starts the enrolment process;
 	int(*sEnroll1)();								// Get the first image of the FP
 	int(*sEnroll2)();								// Get the second image of the FP
 	int(*sEnroll3)();								// Get the third image of the FP
-	bool(*sIsPressFinger)();							// Is the FP pressed?
+	bool(*sIsPressFinger)();						// Is the FP pressed?
 	bool(*sDeleteID)(int ID);						// Delete a specific FP
-	bool(*sDeleteAll)();								// Delete all FPs
+	bool(*sDeleteAll)();							// Delete all FPs
 	int(*sVerify1_1)();								// Compare the pressed FP to a specific one
 	int(*sIdentify1_N)();							// Compare the pressed FP to all the FP from the database
-	bool(*sCaptureFinger)(bool highquality);			// Campture the pressed FP image and temporary store it into RAM (TRUE = highquality)
-
-
-	void(*SendToSerial)(byte data[], int length);	
-	struct sCMD_RSP_PKT*(*GetResponse)();
+	bool(*sCaptureFinger)(bool highquality);		// Campture the pressed FP image and temporary store it into RAM (TRUE = highquality)
 
 	/* Function pointer to the seding packet function */
 	void(*sSendCommand)(byte* packet);
