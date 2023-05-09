@@ -18,7 +18,7 @@ The driver (written in C, based on the GT-511C3 datasheet) is designed to be run
 
 
 
-<h3>Example of one of the comamnds (BIG ENDIAN USED!):</h3>
+<h3>Example of one of the comamnds (LITTLE ENDIAN USED!):</h3>
 
 
 Command - ""Enrollment Start"" (FingerPrint Index = 23 (17 HEX)):
