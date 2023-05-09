@@ -10,6 +10,7 @@ LOG = logging.getLogger(__name__)
 
 def client_loop(client, address):
 	# message = data.decode("utf-8", errors="ignore").strip()
+	# Read coming data (from the microcontroller / C client)
 	while True:
 		data = client.recv(1024)
 		if not data:
@@ -17,7 +18,6 @@ def client_loop(client, address):
 			break
 
 		# The information received (hex bytes not UTF-8) must be converted
-		# message_hex = " ".join([hex(byte)[2:].zfill(2) for byte in data])
 		message_hex = [hex(byte)[2:].zfill(2) for byte in data]  # type list not str
 		print()
 		LOG.info("COMMAND received: {} from {}".format(message_hex, address))
