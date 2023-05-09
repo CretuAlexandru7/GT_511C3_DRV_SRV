@@ -44,3 +44,6 @@ ACK: 0x00 30
 I recommand using the Visual Studio Debug Tab -> Windows -> Memory -> in order to see how the packets / commands are created.
 
 Datasheet for more details: https://cdn.sparkfun.com/datasheets/Sensors/Biometric/GT-511C1R_datasheet_V2-2016-10-25.pdf
+
+Snippit Example:
+![Snippit Example](Images/EXAMPLE_FP_SERVE_CLIENT.png)
