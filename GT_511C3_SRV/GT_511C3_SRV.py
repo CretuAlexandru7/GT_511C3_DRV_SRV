@@ -4,12 +4,9 @@ import socket
 import threading
 import datetime
 
-"""Simple Trivia chat room."""
-import time
-import yaml
-import random
 
 LOG = logging.getLogger(__name__)
+
 
 def client_loop(client, address):
 	# message = data.decode("utf-8", errors="ignore").strip()
@@ -26,7 +23,7 @@ def client_loop(client, address):
 		LOG.info("COMMAND received: {} from {}".format(message_hex, address))
 
 		# From a full command match only the command part:
-		# Eample: '55 aa 01 00 00 00 00 00   [01 00]   01 01'
+		# Example: '55 aa 01 00 00 00 00 00   [01 00]   01 01'
 
 		match message_hex[8:10]:
 			# Case: Open COMMAND
