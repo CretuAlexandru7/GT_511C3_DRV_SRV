@@ -287,6 +287,7 @@ struct GT_511C3* GT_511C3_GetInstance()
 	return FP_SENSOR;
 }
 
+/* Start the Enrollment process. fingerprint_id -> is the DB fingerprint index. */
 void vDoEnrollStart(byte fingerprint_id)
 {
 	if (FP_SENSOR == NULL)
